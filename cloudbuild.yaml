@@ -28,13 +28,9 @@ steps:
       - --cpu=1
       - --min-instances=0
       - --max-instances=1
-      # Set env vars here or prefer using Cloud Run service-level secrets
-      - --set-env-vars=SUPABASE_URL=https://cxccvdpzqazywqpuobpp.supabase.co
-      - --set-env-vars=SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN4Y2N2ZHB6cWF6eXdxcHVvYnBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY2MTczMjMsImV4cCI6MjA3MjE5MzMyM30._ArHLl4fJlrknZEpvTdcuLZWSKLD-MwMHWkUDIk7M7I
-      - --set-env-vars=SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN4Y2N2ZHB6cWF6eXdxcHVvYnBwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NjYxNzMyMywiZXhwIjoyMDcyMTkzMzIzfQ.dxYWqix0WRvs-nvdKUjgsS7idE_oct9x4guQEUyJkqc
+      # Use Secret Manager for sensitive env vars
+      - --set-secrets=SUPABASE_URL=REACT_APP_SUPABASE_URL:latest,SUPABASE_ANON_KEY=REACT_APP_SUPABASE_ANON_KEY:latest,SUPABASE_SERVICE_KEY=SUPABASE_SERVICE_KEY:latest,TENCENT_SECRET_ID=TENCENT_SECRET_ID:latest,TENCENT_SECRET_KEY=TENCENT_SECRET_KEY:latest
       - --set-env-vars=SUPABASE_BUCKET=memory-photos
-      - --set-env-vars=TENCENT_SECRET_ID=IKID3oQr7E9qMfldKI2b2LUP8gARVN4YoqRr
-      - --set-env-vars=TENCENT_SECRET_KEY=MYXN2UildKrBHApAPSL3YqvpW0MZcaef
 
 images:
   - gcr.io/$PROJECT_ID/${_SERVICE}:latest
