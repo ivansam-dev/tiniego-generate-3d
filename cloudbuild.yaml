@@ -1,6 +1,6 @@
 # Cloud Build pipeline to build the Docker image and deploy to Cloud Run
 substitutions:
-  _SERVICE: tiniego-convert-to-3d-api
+  _SERVICE: tiniego-generate-3d
   _REGION: us-central1
 
 options:
