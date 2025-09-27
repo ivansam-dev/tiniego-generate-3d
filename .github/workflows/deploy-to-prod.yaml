@@ -1,0 +1,70 @@
+name: Manual Deploy Prod
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Deploy main to PROD?"
+        required: true
+        type: choice
+        default: "no"
+        options:
+          - "no"
+          - "yes"
+      tag:
+        description: "Optional image tag (unused; defaults to latest)"
+        required: false
+        type: string
+
+jobs:
+  deploy-prod:
+    if: ${{ inputs.confirm == 'yes' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v3
+        with:
+          ref: main
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY_PROD }}
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID_PROD }}
+
+      - name: Submit Cloud Build (async) and wait for result
+        run: |
+          set -euo pipefail
+          PROJECT="${{ secrets.GCP_PROJECT_ID_PROD }}"
+          gcloud config set project "$PROJECT"
+          BUILD_NAME=$(gcloud builds submit --project="$PROJECT" --config=cloudbuild.yaml --substitutions=_SERVICE=tiniego-convert-to-3d-api,_REGION=us-central1 --async --format='value(name)')
+          echo "Build resource: $BUILD_NAME"
+          BUILD_ID="${BUILD_NAME##*/}"
+          if [ -z "${BUILD_ID}" ]; then
+            echo "Failed to determine BUILD_ID"
+            exit 1
+          fi
+          echo "Build ID: $BUILD_ID"
+          for i in $(seq 1 180); do
+            STATUS=$(gcloud builds describe "$BUILD_ID" --project="$PROJECT" --format='value(status)')
+            echo "Build status: $STATUS"
+            if [[ "$STATUS" == "SUCCESS" ]]; then
+              exit 0
+            fi
+            if [[ "$STATUS" == "FAILURE" || "$STATUS" == "INTERNAL_ERROR" || "$STATUS" == "TIMEOUT" || "$STATUS" == "CANCELLED" ]]; then
+              LOG_URL=$(gcloud builds describe "$BUILD_ID" --project="$PROJECT" --format='value(logUrl)')
+              echo "Build failed with status: $STATUS"
+              echo "Logs: $LOG_URL"
+              exit 1
+            fi
+            sleep 5
+          done
+          echo "Build did not complete within expected time"
+          exit 1
+
+
