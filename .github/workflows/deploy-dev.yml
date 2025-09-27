@@ -26,7 +26,7 @@ jobs:
       - name: Submit Cloud Build (async) and wait for result
         run: |
           set -euo pipefail
-          BUILD_NAME=$(gcloud builds submit --config=cloudbuild.yaml --substitutions=_SERVICE=tiniego-convert-to-3d-api,_REGION=us-central1 --async --format='value(name)')
+          BUILD_NAME=$(gcloud builds submit --config=cloudbuild.yaml --substitutions=_SERVICE=tiniego-generate-3d,_REGION=us-central1 --async --format='value(name)')
           echo "Build resource: $BUILD_NAME"
           BUILD_ID="${BUILD_NAME##*/}"
           if [ -z "${BUILD_ID}" ]; then

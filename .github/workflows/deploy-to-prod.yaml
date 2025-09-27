@@ -42,7 +42,7 @@ jobs:
           set -euo pipefail
           PROJECT="${{ secrets.GCP_PROJECT_ID_PROD }}"
           gcloud config set project "$PROJECT"
-          BUILD_NAME=$(gcloud builds submit --project="$PROJECT" --config=cloudbuild.yaml --substitutions=_SERVICE=tiniego-convert-to-3d-api,_REGION=us-central1 --async --format='value(name)')
+          BUILD_NAME=$(gcloud builds submit --project="$PROJECT" --config=cloudbuild.yaml --substitutions=_SERVICE=tiniego-generate-3d,_REGION=us-central1 --async --format='value(name)')
           echo "Build resource: $BUILD_NAME"
           BUILD_ID="${BUILD_NAME##*/}"
           if [ -z "${BUILD_ID}" ]; then
