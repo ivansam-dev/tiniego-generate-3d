@@ -5,7 +5,7 @@ from urllib.parse import urlparse
 from fastapi import HTTPException
 from supabase import create_client, Client
 
-from core.config import Config
+from ..core.config import Config
 
 
 logger = logging.getLogger(__name__)

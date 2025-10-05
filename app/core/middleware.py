@@ -5,7 +5,7 @@ from typing import Callable
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
-from core.config import Config
+from .config import Config
 
 
 logger = logging.getLogger(__name__)

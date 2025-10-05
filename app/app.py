@@ -6,11 +6,11 @@ from datetime import datetime
 from fastapi import FastAPI, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from core.config import Config
-from core.http import download_bytes_from_url
-from core.middleware import log_requests, global_exception_handler
-from core.validation import validate_inputs
-from services.supabase_service import (
+from .core.config import Config
+from .core.http import download_bytes_from_url
+from .core.middleware import log_requests, global_exception_handler
+from .core.validation import validate_inputs
+from .services.supabase_service import (
     create_signed_url_for_storage_object,
     get_figurine_url_from_memory,
     get_client,
@@ -18,7 +18,7 @@ from services.supabase_service import (
     update_memory_with_stl,
     upload_to_supabase,
 )
-from services.tencent_ai3d import generate_stl_from_image_base64, generate_stl_from_image_base64_async
+from .services.tencent_ai3d import generate_stl_from_image_base64, generate_stl_from_image_base64_async
 
 logger = logging.getLogger(__name__)
 
