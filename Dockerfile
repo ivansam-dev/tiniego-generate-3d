@@ -43,4 +43,4 @@ USER appuser
 EXPOSE 8080
 
 # Start the server with uvicorn. Cloud Run provides $PORT.
-CMD exec uvicorn api:app --host 0.0.0.0 --port ${PORT} --forwarded-allow-ips=*
+CMD exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT} --forwarded-allow-ips=*
