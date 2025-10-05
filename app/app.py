@@ -18,7 +18,7 @@ from services.supabase_service import (
     update_memory_with_stl,
     upload_to_supabase,
 )
-from services.tencent_ai3d import generate_stl_from_image_base64
+from services.tencent_ai3d import generate_stl_from_image_base64, generate_stl_from_image_base64_async
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +54,31 @@ def generate_stl_bytes(image_base64: str, enable_pbr: bool, request_id: str) -> 
             return _generate_with_ai3d()
     else:
         return _generate_with_ai3d()
+
+
+async def generate_stl_bytes_async(image_base64: str, enable_pbr: bool, request_id: str) -> bytes:
+    """Async wrapper to generate STL bytes using Tencent service.
+    In development mode, still returns local example file to keep parity.
+    """
+    async def _generate_with_ai3d_async() -> bytes:
+        stl_bytes = await generate_stl_from_image_base64_async(
+            image_base64,
+            enable_pbr=enable_pbr,
+            poll_interval_seconds=5,
+            timeout_seconds=300
+        )
+        return stl_bytes
+
+    if Config.ENVIRONMENT == "development":
+        try:
+            with open("example.stl", "rb") as f:
+                stl_bytes = f.read()
+            return stl_bytes
+        except FileNotFoundError:
+            logger.error(f"[{request_id}] example.stl file not found, falling back to generation")
+            return await _generate_with_ai3d_async()
+    else:
+        return await _generate_with_ai3d_async()
 
 # Initialize FastAPI
 app = FastAPI(title="3D Generation API")
@@ -115,8 +140,8 @@ async def generate_3d(
         image_bytes = download_bytes_from_url(signed_url)
         image_base64 = base64.b64encode(image_bytes).decode('utf-8')
 
-        # Generate STL
-        stl_bytes = generate_stl_bytes(image_base64, enable_pbr, request_id)
+        # Generate STL (async non-blocking)
+        stl_bytes = await generate_stl_bytes_async(image_base64, enable_pbr, request_id)
 
         # Generate filename and upload STL
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")

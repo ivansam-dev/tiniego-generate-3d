@@ -6,6 +6,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=on \
     PIP_DISABLE_PIP_VERSION_CHECK=on \
+    POETRY_NO_INTERACTION=1 \
+    POETRY_VENV_IN_PROJECT=1 \
+    POETRY_CACHE_DIR=/tmp/poetry_cache \
     PORT=8080
 
 # Install system dependencies
@@ -14,14 +17,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
+# Install Poetry
+RUN pip install poetry
+
 # Create app directory
 WORKDIR /app
 
-# Copy dependency files first
-COPY requirements.txt /app/
+# Copy Poetry configuration files
+COPY pyproject.toml poetry.lock ./
+
+# Configure Poetry: Don't create virtual environment, install dependencies to system
+RUN poetry config virtualenvs.create false
 
 # Install Python dependencies
-RUN pip install -r requirements.txt
+RUN poetry install --only=main --no-root && rm -rf $POETRY_CACHE_DIR
 
 # Copy application code
 COPY . /app

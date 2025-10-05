@@ -1,6 +1,7 @@
 import os
 import ssl
 import time
+import asyncio
 from typing import Optional
 from urllib.request import urlopen
 
@@ -57,7 +58,7 @@ def generate_stl_from_image_base64(
     enable_pbr: bool = False,
     poll_interval_seconds: int = 5,
     timeout_seconds: int = 300,
-    region: str = "ap-guangzhou",
+    region: str = "ap-singapore",
 ) -> bytes:
     """Submit an image to Tencent AI3D, poll until done, and return STL bytes.
 
@@ -104,3 +105,53 @@ def generate_stl_from_image_base64(
 
         time.sleep(poll_interval_seconds)
 
+
+async def generate_stl_from_image_base64_async(
+    image_base64: str,
+    *,
+    enable_pbr: bool = False,
+    poll_interval_seconds: int = 5,
+    timeout_seconds: int = 300,
+    region: str = "ap-guangzhou",
+) -> bytes:
+    """Async variant of STL generation using Tencent AI3D.
+
+    Offloads blocking SDK calls and download to the default thread pool using
+    asyncio.to_thread, while the polling cadence uses non-blocking sleeps.
+    """
+    # Use synchronous SDK calls, but keep the long wait periods non-blocking
+    client = _create_client(region)
+    job_id = _submit_job(client, image_base64=image_base64, enable_pbr=enable_pbr)
+
+    deadline = time.monotonic() + timeout_seconds
+    while True:
+        if time.monotonic() > deadline:
+            raise TimeoutError(f"Timed out waiting for job {job_id} to finish")
+
+        query_resp = _query_job(client, job_id)
+        status = query_resp.Status
+
+        if status == "FAIL":
+            error_code = getattr(query_resp, "ErrorCode", None)
+            error_message = getattr(query_resp, "ErrorMessage", None)
+            raise RuntimeError(f"Tencent AI3D job failed ({error_code}): {error_message}")
+
+        if status == "DONE":
+            files = query_resp.ResultFile3Ds or []
+            stl_url: Optional[str] = None
+            for file3d in files:
+                file_type = getattr(file3d, "Type", None)
+                if file_type and str(file_type).upper() == "STL":
+                    stl_url = getattr(file3d, "Url", None)
+                    break
+            if not stl_url:
+                for file3d in files:
+                    candidate = getattr(file3d, "Url", None)
+                    if candidate:
+                        stl_url = candidate
+                        break
+            if not stl_url:
+                raise RuntimeError("STL URL not found in job result")
+            return _download_file(stl_url)
+
+        await asyncio.sleep(poll_interval_seconds)
