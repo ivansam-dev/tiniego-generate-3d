@@ -58,7 +58,7 @@ def generate_stl_from_image_base64(
     enable_pbr: bool = False,
     poll_interval_seconds: int = 5,
     timeout_seconds: int = 300,
-    region: str = "ap-singapore",
+    region: str = "ap-guangzhou",
 ) -> bytes:
     """Submit an image to Tencent AI3D, poll until done, and return STL bytes.
 
